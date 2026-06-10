@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.gradio/
+outputs/
+build/
+dist/
+*.zip
+*.btf
+*.tif
+*.tiff
+*.jpg
+*.jpeg
