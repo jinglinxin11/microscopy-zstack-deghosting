@@ -1,8 +1,9 @@
 # Microscopy Z-Stack Deghosting
 
 This repository implements a compact image-processing pipeline for layered
-microscopy digit images. It can run from raw RGB layer images to the final
-`clean_high_bin` binary output.
+microscopy digit images. It includes a legacy-reference mode that reproduces
+the selected previous `clean_high_bin` result, and a raw-estimate mode that
+computes approximate intermediate images from raw RGB inputs only.
 
 The method does not use digit templates, OCR, label priors, or machine
 learning. It uses dark-signal extraction, multi-scale enhancement, focus-based
@@ -22,7 +23,7 @@ soft separation, evidence-constrained local repair, and binary conversion.
 └── tests/
 ```
 
-## Full Pipeline
+## Recommended Reproduction Pipeline
 
 Input structure:
 
@@ -41,7 +42,28 @@ Run:
 python run_from_raw.py
 ```
 
-The full pipeline is:
+Default mode is `legacy-reference`. It reads raw images for display and uses the
+saved legacy intermediate images in `sample_data`:
+
+```text
+raw.png
++ saved paper_clean.png
++ saved source_hybrid_soft.png
+-> clean_high
+-> clean_high_bin
+```
+
+This is the mode that reproduces the selected previous result most closely.
+
+## Raw-Only Approximation
+
+If you need a pure raw-only run, use:
+
+```bash
+python run_from_raw.py --mode raw-estimate
+```
+
+The raw-estimate pipeline is:
 
 ```text
 raw RGB image
@@ -53,6 +75,9 @@ raw RGB image
 -> clean_high evidence-constrained repair
 -> clean_high_bin final binary output
 ```
+
+This mode is fully automatic from raw inputs, but it is a simplified
+approximation and will not exactly match the legacy tuned result.
 
 Outputs include:
 
