@@ -120,3 +120,34 @@ pip install -r requirements.txt
 ```bash
 pytest
 ```
+
+## New Method: 24-Level Binary Comparison
+
+The `new_method` workflow adds a deterministic 24-level binary comparison
+stage. It creates 12 `clean` thresholds and 12 `ultra` thresholds, ordered from
+more permissive to more selective. The method is image-structure based: it does
+not use OCR, digit templates, class labels, or learned models.
+
+Default layer selection for the current curated output is `1,3,7`; layer `4` is
+intentionally excluded from the selected artifact set.
+
+Example:
+
+```bash
+python run_new_method_24level.py \
+  --clean-dir path/to/clean_inputs \
+  --ultra-dir path/to/ultra_inputs \
+  --clean-pattern "layer{layer}_clean.png" \
+  --ultra-pattern "layer{layer}_ultra.png" \
+  --layers 1,3,7 \
+  --selected-variant ultra_03_p62_bin \
+  --outdir outputs/new_method_137
+```
+
+Generated outputs:
+
+- `binary_24level_comparison.png`: 24-level comparison grid.
+- `binary_24level/layer*_*.png`: individual level masks.
+- `selected_single_images/layer*_ultra_03_p62_bin.png`: one selected image per requested layer.
+
+Curated example artifacts are stored under `artifacts/new_method_137/`.
