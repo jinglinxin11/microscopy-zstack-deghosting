@@ -1,122 +1,147 @@
-# Microscopy Z-Stack Deghosting
+# Template-Guided Digit Cleanup
 
-This repository implements a compact image-processing pipeline for layered
-microscopy digit images. It includes a legacy-reference mode that reproduces
-the selected previous `clean_high_bin` result, and a raw-estimate mode that
-computes approximate intermediate images from raw RGB inputs only.
+This project keeps only the current deterministic algorithm and the Gradio parameter tuner for microscopy layered-number cleanup. The default workflow processes data IDs `1`, `3`, `4`, and `7` from the existing `ultra_03_p62_bin` candidate masks.
 
-The method does not use digit templates, OCR, label priors, or machine
-learning. It uses dark-signal extraction, multi-scale enhancement, focus-based
-soft separation, evidence-constrained local repair, and binary conversion.
+The algorithm does not take the target digit label as a manual instruction. It extracts candidate strokes from the target image, matches available auxiliary `.tif` templates under target-scale translation and scaling, then uses the aligned template as an explainable shape gate for denoising and stroke repair.
 
-## Project Layout
+## Kept Code
 
-```text
-.
-├── run_from_raw.py              # full raw -> final pipeline
-├── run_clean_high_bin.py        # final-stage-only compatibility runner
-├── raw_data/                    # raw-only example input
-├── sample_data/                 # final-stage example input
-├── src/
-│   ├── raw_pipeline.py
-│   └── clean_high_bin.py
-└── tests/
-```
+- `scripts/make_template_guided_repair.py`: batch algorithm, template matching, repair, metrics, and output export.
+- `scripts/gradio_template_tuner.py`: interactive Gradio frontend for parameter tuning.
 
-## Recommended Reproduction Pipeline
+## Required Inputs
 
-Input structure:
+- Raw images: `分层数字1.jpg`, `分层数字3.jpg`, `分层数字4.jpg`, `分层数字7.jpg`
+- Candidate masks: `results/binary_clean_ultra_24level_comparison/layer{data_id}_ultra_03_p62_bin.png`
+- Top-hat signals: `results/paper_tophat_jpg/layer{data_id}_black_tophat_signal.tif`
+- Ultra signal images: `results/aggressive_ghost_fade/layer{data_id}_ultra_signal.tif`
+- Auxiliary templates: `.tif` files under the project root, including the `辅助图` directory.
 
-```text
-raw_data/
-└── layers/
-    ├── 1/raw.png
-    ├── 3/raw.png
-    ├── 4/raw.png
-    └── 7/raw.png
-```
+## Run
 
-Run:
+Batch algorithm:
 
 ```bash
-python run_from_raw.py
+python scripts/make_template_guided_repair.py
 ```
 
-Default mode is `legacy-reference`. It reads raw images for display and uses the
-saved legacy intermediate images in `sample_data`:
-
-```text
-raw.png
-+ saved paper_clean.png
-+ saved source_hybrid_soft.png
--> clean_high
--> clean_high_bin
-```
-
-This is the mode that reproduces the selected previous result most closely.
-
-## Raw-Only Approximation
-
-If you need a pure raw-only run, use:
+Gradio frontend:
 
 ```bash
-python run_from_raw.py --mode raw-estimate
+python scripts/gradio_template_tuner.py
 ```
 
-The raw-estimate pipeline is:
-
-```text
-raw RGB image
--> dark signal extraction
--> multi-scale black-hat / DoG enhancement
--> focus-weighted soft layer separation
--> source_hybrid_soft evidence image
--> paper_clean deghosted image
--> clean_high evidence-constrained repair
--> clean_high_bin final binary output
-```
-
-This mode is fully automatic from raw inputs, but it is a simplified
-approximation and will not exactly match the legacy tuned result.
-
-Outputs include:
-
-```text
-dark.png
-enhanced.png
-source_hybrid_soft.png
-paper_clean.png
-clean_high.png
-clean_high_bin.png
-support_mask.png
-added_audit.png
-```
-
-## Final-Stage-Only Runner
-
-If `paper_clean.png` and `source_hybrid_soft.png` already exist, run:
+Dry-run one frontend preview without launching the browser:
 
 ```bash
-python run_clean_high_bin.py
+python scripts/gradio_template_tuner.py --dry-run --data-id 4
 ```
 
-Expected input:
+## Output
+
+The batch script writes outputs to:
 
 ```text
-sample_data/layers/<label>/
-├── raw.png
-├── paper_clean.png
-└── source_hybrid_soft.png
+figures/template_guided_repair/
 ```
 
-## Install
+Main outputs include:
 
-```bash
-pip install -r requirements.txt
-```
+- `masks/`: before and final binary masks.
+- `pool/`: loose repair pool before template gating.
+- `template_gate/`: aligned template core and tolerance gate.
+- `template_soft/`: soft aligned template map.
+- `template_overlay/`: template alignment visualized on raw image.
+- `removed/`: non-template fragments removed from the repair pool.
+- `yellow/`: before/final yellow-background visualization.
+- `changes/`: white kept, cyan added, red removed.
+- `template_guided_metrics.csv`: final pixel counts, match quality, and refined alignment parameters.
+- `template_match_decisions.csv`: template matching decisions and target-derived frame.
+- `template_guided_repair.zip`: packaged batch output.
 
-## Test
+## Algorithm Steps
 
-```bash
-pytest
-```
+1. Load raw image, top-hat signal, ultra signal, and `ultra_03_p62_bin` candidate mask.
+2. Build a loose repair pool from candidate pixels and local top-hat signal.
+3. Estimate a target-derived digit frame from the target image only.
+4. Extract candidate template shapes from auxiliary `.tif` files.
+5. Match all templates against the target-derived pool under target-scale constraints.
+6. Optionally refine template scale and offset around the initial match.
+7. Build aligned `template_core`, `template_gate`, and `template_soft`.
+8. Keep candidate components supported by template geometry, center prior, stroke continuity, and signal intensity.
+9. Add repair pixels only inside the allowed repair pool and template-consistent neighborhood.
+10. Export final mask, yellow visualization, change map, overlay, metrics, and zip package.
+
+## Current Default Alignment Parameters
+
+These values are the parameters used to initialize matching/refinement in both the batch script and Gradio frontend. Because `auto_refine_alignment=True`, the final effective alignment is recomputed per image and written to `template_guided_metrics.csv`.
+
+| data_id | template_scale_multiplier | template_scale_x_multiplier | template_scale_y_multiplier | template_y_offset_px | template_x_offset_px | auto_refine_alignment |
+|---:|---:|---:|---:|---:|---:|:---:|
+| 1 | 1.000 | 1.000 | 1.000 | 0 | 0 | true |
+| 3 | 1.000 | 1.000 | 1.000 | 0 | 0 | true |
+| 4 | 1.300 | 1.440 | 1.320 | 235 | -70 | false |
+| 7 | 1.000 | 1.000 | 1.000 | 0 | 0 | true |
+
+## Current Default Filter Parameters
+
+| parameter | data1 | data3 | data4 | data7 |
+|---|---:|---:|---:|---:|
+| soft_margin_distance | 26 | 38 | 18 | 32 |
+| strong_margin_distance | 48 | 68 | 38 | 56 |
+| template_soft_threshold | 0.006 | 0.008 | 0.085 | 0.006 |
+| soft_edge_inside_fraction | 0.28 | 0.30 | 0.32 | 0.28 |
+| soft_edge_min_signal | 0.17 | 0.16 | 0.18 | 0.17 |
+| strong_contiguous_seed_overlap | 26 | 24 | 28 | 26 |
+| strong_contiguous_min_signal | 0.24 | 0.23 | 0.25 | 0.24 |
+| repair_distance | 16 | 24 | 22 | 16 |
+| strong_distance | 9 | 14 | 14 | 9 |
+| template_min | 0.025 | 0.016 | 0.100 | 0.025 |
+| close_length | 9 | 13 | 23 | 9 |
+| bridge_length | 0 | 0 | 24 | 0 |
+| bridge_distance | 0 | 0 | 22 | 0 |
+| connected_zone_iterations | 9 | 8 | 7 | 9 |
+| use_repair_pool | true | true | true | true |
+| allow_repair_add | true | true | true | true |
+
+## Latest Default-Run Refined Results
+
+These values were generated by running `python scripts/make_template_guided_repair.py` after the cleanup. They are output metrics, not manually entered labels.
+
+| data_id | predicted_digit | score | template_match_fraction | alignment_score | refined_scale | refined_scale_x | refined_scale_y | refined_y_offset_px | refined_x_offset_px | before_px | pool_px | final_px | removed_px | added_px |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 1 | 0.897992 | 0.828039 | 0.561566 | 1.040000 | 1.100000 | 1.020000 | -45 | 0 | 489226 | 907869 | 916335 | 94218 | 521327 |
+| 3 | 3 | 0.720460 | 0.789413 | 0.383702 | 1.000000 | 1.020000 | 1.060000 | 0 | 0 | 464516 | 863315 | 1012658 | 34223 | 582365 |
+| 4 | 4 | 0.793242 | 0.797579 | 0.458819 | 1.300000 | 1.440000 | 1.320000 | 235 | -70 | 501648 | 969580 | 1196715 | 46062 | 741129 |
+| 7 | 4 | 0.789770 | 0.886216 | 0.518118 | 1.080000 | 1.100000 | 0.980000 | 0 | -45 | 499405 | 995373 | 1065103 | 61663 | 627361 |
+
+## Parameter Meaning
+
+- `template_scale_multiplier`: global template size multiplier before refinement.
+- `template_scale_x_multiplier`: horizontal template scale multiplier.
+- `template_scale_y_multiplier`: vertical template scale multiplier.
+- `template_y_offset_px`: initial vertical offset in target pixels.
+- `template_x_offset_px`: initial horizontal offset in target pixels.
+- `auto_refine_alignment`: searches nearby scale and offset candidates and selects the highest-scoring alignment.
+- `soft_margin_distance`: soft gate margin around the template core; larger values tolerate more deformation.
+- `strong_margin_distance`: wider distance used for strong-signal continuity near the template.
+- `template_soft_threshold`: minimum soft-template intensity accepted in the soft gate.
+- `soft_edge_inside_fraction`: minimum fraction of a component that must lie inside the soft gate for edge components.
+- `soft_edge_min_signal`: minimum mean signal for edge-supported components.
+- `strong_contiguous_seed_overlap`: seed overlap required for strong contiguous components.
+- `strong_contiguous_min_signal`: minimum signal for strong contiguous support.
+- `repair_distance`: distance around accepted strokes where repair pixels may be considered.
+- `strong_distance`: distance around strong strokes used to preserve/recover connected pieces.
+- `template_min`: minimum soft-template support for repair additions.
+- `close_length`: directional closing length for reconnecting stroke-like gaps.
+- `bridge_length`: extra directional bridge length, mainly used for data4.
+- `bridge_distance`: distance limit for bridge repair, mainly used for data4.
+- `connected_zone_iterations`: dilation iterations used to preserve strong pixels connected to kept strokes.
+- `use_repair_pool`: restricts added repair pixels to the target-derived repair pool.
+- `allow_repair_add`: allows template-supported repair pixels to be added to the final mask.
+
+## Notes
+
+- `data7` is still named by file/data ID, but the current template matching can predict digit `4` if the target content is closer to a `4` template.
+- The auxiliary template is resized and shifted to the target image. The target image size and target-derived frame remain the reference; the algorithm does not resize the target to the template.
+- The method is explainable because exported overlays, gates, removed fragments, change maps, and CSV metrics show why pixels are kept, repaired, or removed.

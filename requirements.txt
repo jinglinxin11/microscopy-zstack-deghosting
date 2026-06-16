@@ -1,4 +1,7 @@
 numpy
-opencv-python
-Pillow
-pytest
+scipy
+pillow
+tifffile
+matplotlib
+scikit-image
+gradio
