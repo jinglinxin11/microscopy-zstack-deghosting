@@ -1,4 +1,4 @@
-"""One objective and one transform for SZTU ranking, localization, and rendering.
+"""One objective and one transform for ranking, localization, and rendering.
 
 This module deliberately contains no file-name or label logic.  Each call
 registers one target structure against one auxiliary structure and returns the
@@ -15,8 +15,8 @@ import numpy as np
 from scipy.optimize import minimize
 from skimage.morphology import skeletonize
 
-from sztu_image_core import Structure, corridor_from_points, orientation_fields
-from sztu_topology_match import TopologyScore, score_aligned_skeletons
+from .image_processing import Structure, corridor_from_points, orientation_fields
+from .topology_metrics import TopologyScore, score_aligned_skeletons
 
 
 @dataclass(frozen=True)

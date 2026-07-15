@@ -1,4 +1,4 @@
-"""Minimal in-memory SZTU recognition pipeline and final-result writer.
+"""In-memory auxiliary-guided matching pipeline and final-result writer.
 
 This module owns orchestration only. Image evidence extraction, registration,
 topology scoring, and binary gating remain in their dedicated modules. The
@@ -14,10 +14,9 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from sztu_image_core import Structure, build_structure, corridor_from_points, read, resize_for_analysis, write
-from sztu_matched_binary import matched_only_mask, native_binary_image
-from sztu_physical_calibration import PhysicalScaleEstimate, estimate_pixels_per_um
-from sztu_unified_registration import (
+from .evidence_mask import matched_only_mask, native_binary_image
+from .image_processing import Structure, build_structure, corridor_from_points, read, resize_for_analysis, write
+from .registration import (
     UnifiedMatch,
     native_affine,
     native_bbox,
@@ -25,6 +24,7 @@ from sztu_unified_registration import (
     select_central_auxiliary_support,
     transform_points,
 )
+from .scale_calibration import PhysicalScaleEstimate, estimate_pixels_per_um
 
 
 DEFAULT_TARGET_SCALE_BAR_UM = 200.0
@@ -50,9 +50,10 @@ class SelectedMatch:
 
 @dataclass(frozen=True)
 class PipelineRun:
-    """Complete in-memory recognition state for one input directory."""
+    """Complete in-memory recognition state for one target/reference pair."""
 
-    input_root: Path
+    target_dir: Path
+    reference_dir: Path
     pair_rows: tuple[dict[str, object], ...]
     summary_rows: tuple[dict[str, object], ...]
     selections: tuple[SelectedMatch, ...]
@@ -190,19 +191,29 @@ def _pair_row(
     }
 
 
+def _image_paths(directory: Path) -> list[Path]:
+    supported_suffixes = {".png", ".jpg", ".jpeg"}
+    return sorted(
+        path for path in directory.iterdir()
+        if path.is_file() and path.suffix.lower() in supported_suffixes
+    )
+
+
 def run_pipeline(
-    input_root: Path,
+    target_dir: Path,
+    reference_dir: Path,
     *,
     target_scale_bar_um: float = DEFAULT_TARGET_SCALE_BAR_UM,
     auxiliary_scale_bar_um: float = DEFAULT_AUXILIARY_SCALE_BAR_UM,
 ) -> PipelineRun:
     """Run label-free, independent matching without writing intermediate files."""
 
-    root = input_root.resolve()
-    target_paths = sorted((root / "target_second_row").glob("*.png"))
-    auxiliary_paths = sorted((root / "auxiliary_saved").glob("*.png"))
+    resolved_target_dir = target_dir.resolve()
+    resolved_reference_dir = reference_dir.resolve()
+    target_paths = _image_paths(resolved_target_dir)
+    auxiliary_paths = _image_paths(resolved_reference_dir)
     if len(target_paths) != 4 or len(auxiliary_paths) != 4:
-        raise RuntimeError("Expected exactly four target and four auxiliary PNG files.")
+        raise RuntimeError("Expected exactly four target and four reference image files.")
 
     target_images = [read(path) for path in target_paths]
     auxiliary_images = [read(path) for path in auxiliary_paths]
@@ -319,7 +330,8 @@ def run_pipeline(
         )
 
     return PipelineRun(
-        input_root=root,
+        target_dir=resolved_target_dir,
+        reference_dir=resolved_reference_dir,
         pair_rows=tuple(pair_rows),
         summary_rows=tuple(summary_rows),
         selections=tuple(selections),

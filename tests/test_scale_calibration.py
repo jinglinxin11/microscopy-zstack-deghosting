@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pytest
 
-from sztu_physical_calibration import estimate_pixels_per_um
+from microscopy_matching.scale_calibration import estimate_pixels_per_um
 
 
 def _synthetic_scale_image(

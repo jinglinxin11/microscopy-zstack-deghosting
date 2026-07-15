@@ -1,4 +1,4 @@
-"""Non-fabricating binary export helpers for selected SZTU registrations."""
+"""Non-fabricating binary export helpers for selected registrations."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import cv2
 import numpy as np
 
-from sztu_image_core import corridor_from_points
+from .image_processing import corridor_from_points
 
 
 @dataclass(frozen=True)

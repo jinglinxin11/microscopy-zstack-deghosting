@@ -1,4 +1,4 @@
-"""Current shared image-processing primitives for the SZTU pipeline.
+"""Shared image-processing primitives for auxiliary-guided matching.
 
 This module intentionally contains only preprocessing and geometry helpers
 used by the current unified registration and matched-only binary export. It

@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pytest
 
-from sztu_topology_match import extract_skeleton_topology, score_aligned_skeletons
+from microscopy_matching.topology_metrics import extract_skeleton_topology, score_aligned_skeletons
 
 
 def _canvas() -> np.ndarray:
@@ -73,7 +73,7 @@ def test_extract_topology_detects_endpoints_and_directional_strokes(
         assert any(_near_angle(value, expected) for value in angles)
 
 
-def test_correct_sztu_pairs_outrank_cross_glyphs() -> None:
+def test_matching_pairs_outrank_cross_glyphs() -> None:
     correct_u = score_aligned_skeletons(_draw_u(), _draw_u())
     wrong_t_for_u = score_aligned_skeletons(_draw_t(), _draw_u())
     correct_z = score_aligned_skeletons(_draw_z(), _draw_z())

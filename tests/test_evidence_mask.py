@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from sztu_matched_binary import binary_image, matched_only_mask, native_binary_image
+from microscopy_matching.evidence_mask import binary_image, matched_only_mask, native_binary_image
 
 
 def test_matched_only_mask_is_a_subset_of_target_and_corridor() -> None:

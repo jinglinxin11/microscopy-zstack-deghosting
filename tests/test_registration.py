@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 from skimage.morphology import skeletonize
 
-from sztu_image_core import Structure
-from sztu_unified_registration import (
+from microscopy_matching.image_processing import Structure
+from microscopy_matching.registration import (
     UnifiedSearchConfig,
     analysis_scale_prior,
     native_affine,

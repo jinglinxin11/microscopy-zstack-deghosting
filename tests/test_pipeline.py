@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
-from sztu_pipeline import PipelineRun, SelectedMatch, minimal_results_payload
+from microscopy_matching.pipeline import PipelineRun, SelectedMatch, minimal_results_payload
 
 
 def test_minimal_results_payload_contains_only_final_result_references() -> None:
@@ -33,7 +33,7 @@ def test_minimal_results_payload_contains_only_final_result_references() -> None
         rendered=np.zeros((1, 1, 3), dtype=np.uint8),
     )
     payload = minimal_results_payload(
-        PipelineRun(Path("."), (), (row,), (selection,))
+        PipelineRun(Path("."), Path("."), (), (row,), (selection,))
     )
 
     assert payload["mode"] == "automatic_independent_no_batch_assignment"

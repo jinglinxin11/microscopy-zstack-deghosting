@@ -1,4 +1,4 @@
-"""Label-independent topology evidence for aligned SZTU skeletons.
+"""Label-independent topology evidence for aligned microscopy skeletons.
 
 This module deliberately has no filename, class-label, or drawing interface.
 It consumes two already aligned 2-D masks/skeletons and reports how well the
