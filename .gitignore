@@ -2,3 +2,17 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .DS_Store
+
+# Track only the reproducible SZTU inputs and nine minimal outputs.
+output/*
+!output/saved_second_row_target_and_auxiliary_SZTU/
+!output/saved_second_row_target_and_auxiliary_SZTU/target_second_row/
+!output/saved_second_row_target_and_auxiliary_SZTU/target_second_row/*.png
+!output/saved_second_row_target_and_auxiliary_SZTU/auxiliary_saved/
+!output/saved_second_row_target_and_auxiliary_SZTU/auxiliary_saved/*.png
+!output/minimal_refactor_SZTU/
+!output/minimal_refactor_SZTU/results.json
+!output/minimal_refactor_SZTU/presentation/
+!output/minimal_refactor_SZTU/presentation/*.png
+!output/minimal_refactor_SZTU/binary/
+!output/minimal_refactor_SZTU/binary/*.png
