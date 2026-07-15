@@ -1,0 +1,78 @@
+{
+  "mode": "automatic_independent_no_batch_assignment",
+  "binary_rule": "target_foreground_and_registered_auxiliary_corridor",
+  "results": [
+    {
+      "target_id": "target_01",
+      "selected_label": "S",
+      "selected_score": 0.55108033,
+      "runner_up_label": "Z",
+      "margin": 0.18637161,
+      "decision_status": "review_required_topology",
+      "analysis_transform": {
+        "scale": 1.1581031,
+        "angle_deg": 4.45092872,
+        "dx": 88.08852519,
+        "dy": -12.91606923
+      },
+      "native_bbox_xyxy": "1626 294 3228 2751",
+      "status_flags": "physical_scale_report_only|missing_critical_stroke|low_endpoint_coverage",
+      "presentation_file": "presentation/target_01_S.png",
+      "binary_file": "binary/target_01_S.png"
+    },
+    {
+      "target_id": "target_02",
+      "selected_label": "T",
+      "selected_score": 0.42526834,
+      "runner_up_label": "Z",
+      "margin": 0.00153301,
+      "decision_status": "review_required_low_margin",
+      "analysis_transform": {
+        "scale": 1.60442194,
+        "angle_deg": 1.26138194,
+        "dx": 0.0011239,
+        "dy": 39.35851355
+      },
+      "native_bbox_xyxy": "1239 309 3076 2999",
+      "status_flags": "physical_scale_report_only|coarse_boundary_hit|missing_critical_stroke|low_endpoint_coverage",
+      "presentation_file": "presentation/target_02_T.png",
+      "binary_file": "binary/target_02_T.png"
+    },
+    {
+      "target_id": "target_03",
+      "selected_label": "U",
+      "selected_score": 0.48844959,
+      "runner_up_label": "T",
+      "margin": 0.1411197,
+      "decision_status": "review_required_boundary_hit",
+      "analysis_transform": {
+        "scale": 1.53688284,
+        "angle_deg": -0.31592235,
+        "dx": 51.3778639,
+        "dy": 10.01532544
+      },
+      "native_bbox_xyxy": "1345 123 3126 2787",
+      "status_flags": "physical_scale_report_only|coarse_boundary_hit|flat_registration|missing_critical_stroke|low_endpoint_coverage",
+      "presentation_file": "presentation/target_03_U.png",
+      "binary_file": "binary/target_03_U.png"
+    },
+    {
+      "target_id": "target_04",
+      "selected_label": "Z",
+      "selected_score": 0.44315846,
+      "runner_up_label": "T",
+      "margin": 0.01197429,
+      "decision_status": "review_required_low_margin",
+      "analysis_transform": {
+        "scale": 1.35324764,
+        "angle_deg": 0.00057823,
+        "dx": 94.21279671,
+        "dy": 15.41129427
+      },
+      "native_bbox_xyxy": "1582 313 3399 2557",
+      "status_flags": "physical_scale_report_only|missing_critical_stroke|low_endpoint_coverage",
+      "presentation_file": "presentation/target_04_Z.png",
+      "binary_file": "binary/target_04_Z.png"
+    }
+  ]
+}
